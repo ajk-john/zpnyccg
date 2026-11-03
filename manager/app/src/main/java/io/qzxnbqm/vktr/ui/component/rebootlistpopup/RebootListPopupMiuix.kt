@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import io.qzxnbqm.vktr.R
 import io.qzxnbqm.vktr.ui.component.KsuIsValid
 import io.qzxnbqm.vktr.ui.component.ListPopupDefaults
+import io.qzxnbqm.vktr.ui.component.miuix.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
@@ -71,7 +72,7 @@ fun RebootDropdownItem(
     index: Int,
     onReboot: (String) -> Unit,
 ) {
-    io.qzxnbqm.vktr.ui.component.miuix.DropdownItem(
+    DropdownItem(
         text = stringResource(option.labelRes),
         optionSize = optionSize,
         onSelectedIndexChange = {

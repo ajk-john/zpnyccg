@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import io.qzxnbqm.vktr.R
+import io.qzxnbqm.vktr.data.script.ScriptRepository
 import io.qzxnbqm.vktr.ui.LocalUiMode
 import io.qzxnbqm.vktr.ui.UiMode
 import io.qzxnbqm.vktr.ui.component.SearchStatus
@@ -31,6 +32,7 @@ import io.qzxnbqm.vktr.ui.navigation3.LocalNavigator
 import io.qzxnbqm.vktr.ui.navigation3.Route
 import io.qzxnbqm.vktr.ui.screen.flash.FlashIt
 import io.qzxnbqm.vktr.ui.screen.modulerepo.downloadFailureMessage
+import io.qzxnbqm.vktr.ui.screen.scriptrun.ScriptRunArg
 import io.qzxnbqm.vktr.ui.util.download
 import io.qzxnbqm.vktr.ui.util.module.Shortcut
 import io.qzxnbqm.vktr.ui.viewmodel.ModuleViewModel
@@ -172,7 +174,20 @@ fun ModulePager(
             viewModel.undoUninstallModule(module)
         },
         onOpenFlash = { uris ->
-            if (uris.isNotEmpty()) {
+            if (uris.size == 1) {
+                // A one-shot script ZIP is offered to be run instead (or installed anyway).
+                scope.launch {
+                    val script = ScriptRepository.peekOneshot(uris.first())
+                    if (script != null) {
+                        navigator.push(
+                            Route.ScriptRun(ScriptRunArg(uris.first(), offerInstall = true, displayName = script.name))
+                        )
+                    } else {
+                        navigator.push(Route.Flash(FlashIt.FlashModules(uris)))
+                    }
+                    viewModel.markNeedRefresh()
+                }
+            } else if (uris.isNotEmpty()) {
                 navigator.push(Route.Flash(FlashIt.FlashModules(uris)))
                 viewModel.markNeedRefresh()
             }

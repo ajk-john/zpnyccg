@@ -15,6 +15,7 @@ import io.qzxnbqm.vktr.data.registry.ApiVersionRef
 import io.qzxnbqm.vktr.data.registry.FileRegistryCache
 import io.qzxnbqm.vktr.data.registry.RegistryClient
 import io.qzxnbqm.vktr.data.registry.RegistryFetcher
+import io.qzxnbqm.vktr.data.registry.RegistryKind
 import io.qzxnbqm.vktr.data.registry.RegistryLocale
 import io.qzxnbqm.vktr.data.registry.RegistryUpdatePolicy
 import io.qzxnbqm.vktr.data.registry.RegistryUrls
@@ -154,7 +155,7 @@ class ModuleRepoRepositoryImpl : ModuleRepoRepository {
     }.getOrDefault(iso to 0L)
 
     private fun ApiModuleSummary.toRepoModule(): RepoModule =
-        buildRepoModule(id, name, summary, authors, tags, metamodule, icon, stable, stars, starsRepository)
+        buildRepoModule(id, name, summary, authors, tags, metamodule, kind, icon, stable, stars, starsRepository)
 
     private fun buildRepoModule(
         id: String,
@@ -163,6 +164,7 @@ class ModuleRepoRepositoryImpl : ModuleRepoRepository {
         authors: List<ApiAuthor>,
         tags: List<String>,
         metamodule: Boolean,
+        kind: String,
         icon: String?,
         stable: ApiVersionRef,
         stars: Int?,
@@ -180,6 +182,7 @@ class ModuleRepoRepositoryImpl : ModuleRepoRepository {
             summary = summary.trim(),
             tags = tags,
             metamodule = metamodule,
+            isScript = kind == RegistryKind.SCRIPT,
             iconUrl = icon?.let { client.resolve(it) },
             latestVersion = stable.version,
             latestVersionCode = stable.versionCode,
@@ -196,7 +199,7 @@ class ModuleRepoRepositoryImpl : ModuleRepoRepository {
         readmeFailed: Boolean,
         fromCache: Boolean,
     ): RepoModuleDetail {
-        val module = buildRepoModule(id, name, summary, authors, tags, metamodule, icon, stable, stars, starsRepository)
+        val module = buildRepoModule(id, name, summary, authors, tags, metamodule, kind, icon, stable, stars, starsRepository)
         return RepoModuleDetail(
             module = module,
             license = license,

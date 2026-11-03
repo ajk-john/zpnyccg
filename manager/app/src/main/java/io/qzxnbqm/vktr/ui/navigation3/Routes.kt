@@ -5,8 +5,10 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import io.qzxnbqm.vktr.ui.screen.flash.FlashIt
 import io.qzxnbqm.vktr.ui.screen.modulerepo.RepoModuleArg
+import io.qzxnbqm.vktr.ui.screen.scriptrun.ScriptRunArg
 import io.qzxnbqm.vktr.ui.util.FlashItSerializer
 import io.qzxnbqm.vktr.ui.util.RepoModuleArgSerializer
+import io.qzxnbqm.vktr.ui.util.ScriptRunArgSerializer
 import io.qzxnbqm.vktr.ui.util.TemplateInfoSerializer
 import io.qzxnbqm.vktr.ui.viewmodel.TemplateViewModel
 import top.yukonga.miuix.kmp.nav.core.NavKey
@@ -83,4 +85,8 @@ sealed interface Route : NavKey, Parcelable {
     @Parcelize
     @Serializable
     data class ExecuteModuleAction(val moduleId: String, val fromShortcut: Boolean = false) : Route
+
+    @Parcelize
+    @Serializable
+    data class ScriptRun(@Serializable(with = ScriptRunArgSerializer::class) val arg: ScriptRunArg) : Route
 }
