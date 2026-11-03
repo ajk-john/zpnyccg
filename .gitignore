@@ -9,3 +9,9 @@ __pycache__
 /dist
 /repack-config.json
 /userspace/ksud/.lkm_image_bootstrap.o
+
+# KernelSU DIY: signing material must never be committed
+/.diy-secrets/
+*.jks
+*.p12
+*.keystore

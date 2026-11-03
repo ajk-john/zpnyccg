@@ -131,14 +131,17 @@ endif
 KSU_NEW_DCACHE_FLUSH := $(shell grep -q __flush_dcache_area $(srctree)/arch/arm64/include/asm/cacheflush.h ; echo $$?)
 $(info -- KSU_NEW_DCACHE_FLUSH: $(KSU_NEW_DCACHE_FLUSH))
 
+# KernelSU DIY: manager package name and signing certificate (DER size / SHA-256).
+# Keep in sync with userspace/ksud/build.rs and manager/app/build.gradle.kts;
+# use `python3 diy/ksu_diy.py set-package|set-cert` to change them, `check` to verify.
 KSU_IS_PR_BUILD ?= 0
 ifeq ($(KSU_IS_PR_BUILD),0)
-KSU_PACKAGE_NAME ?= me.weishu.kernelsu
+KSU_PACKAGE_NAME ?= com.kdiy.manager
 else
-KSU_PACKAGE_NAME ?= me.weishu.kernelsu.pr
+KSU_PACKAGE_NAME ?= com.kdiy.manager.pr
 endif
-KSU_EXPECTED_SIZE ?= 0x033b
-KSU_EXPECTED_HASH ?= c371061b19d8c7d7d6133c6a9bafe198fa944e50c1b31c9d8daa8d7f1fc2d2d6
+KSU_EXPECTED_SIZE ?= 0x0315
+KSU_EXPECTED_HASH ?= 3a0f8ed23ab431cb22bb0dbbca783b6719a2f644303ab5a6a6c37aa8ecf8311e
 
 $(info -- KernelSU Manager package name: $(KSU_PACKAGE_NAME))
 $(info -- KernelSU Manager signature size: $(KSU_EXPECTED_SIZE))

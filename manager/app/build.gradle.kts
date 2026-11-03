@@ -23,10 +23,12 @@ val managerVersionCode = rootProject.extra["managerVersionCode"] as Int
 val managerVersionName = rootProject.extra["managerVersionName"] as String
 
 val isPrBuild = project.findProperty("IS_PR_BUILD")?.toString()?.toBoolean() ?: false
-val defaultManagerPackageName = if (isPrBuild) "me.weishu.kernelsu.pr" else "me.weishu.kernelsu"
+val defaultManagerPackageName = if (isPrBuild) "com.kdiy.manager.pr" else "com.kdiy.manager"
 val defaultManagerName = if (isPrBuild) "KernelSU PR" else "KernelSU"
 val managerPackageName = project.findProperty("KSU_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
 val managerName = project.findProperty("KSU_NAME")?.toString() ?: defaultManagerName
+// GitHub "owner/repo" whose releases the manager checks for updates; empty disables the check
+val managerUpdateRepo = project.findProperty("KSU_UPDATE_REPO")?.toString() ?: ""
 
 apksign {
     storeFileProperty = "KEYSTORE_FILE"
@@ -149,6 +151,7 @@ android {
         applicationId = managerPackageName
 
         buildConfigField("boolean", "IS_PR_BUILD", isPrBuild.toString())
+        buildConfigField("String", "UPDATE_REPO", "\"$managerUpdateRepo\"")
         resValue("string", "app_name", managerName)
 
         externalNativeBuild {

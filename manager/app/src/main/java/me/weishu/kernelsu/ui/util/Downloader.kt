@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
+import me.weishu.kernelsu.BuildConfig
 import me.weishu.kernelsu.data.registry.ExpectedFile
 import me.weishu.kernelsu.ksuApp
 import me.weishu.kernelsu.ui.util.module.LatestVersionInfo
@@ -52,8 +53,10 @@ internal suspend fun isDownloadAvailable(uri: Uri): Boolean = withContext(Dispat
 }
 
 fun checkNewVersion(): LatestVersionInfo {
+    // Official releases use a different package name and signing key, so only check our own repo
+    if (BuildConfig.UPDATE_REPO.isBlank()) return LatestVersionInfo()
     if (!isNetworkAvailable(ksuApp)) return LatestVersionInfo()
-    val url = "https://api.github.com/repos/tiann/KernelSU/releases/latest"
+    val url = "https://api.github.com/repos/${BuildConfig.UPDATE_REPO}/releases/latest"
     // default null value if failed
     val defaultValue = LatestVersionInfo()
     runCatching {

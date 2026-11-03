@@ -39,7 +39,10 @@ perform_cleanup() {
 # Sets up or update KernelSU environment
 setup_kernelsu() {
     echo "[+] Setting up KernelSU..."
-    test -d "$GKI_ROOT/KernelSU" || git clone https://github.com/tiann/KernelSU && echo "[+] Repository cloned."
+    # The official repo expects the official manager; point this at your DIY fork
+    KSU_REPO_URL="${KSU_REPO_URL:-https://github.com/tiann/KernelSU}"
+    echo "[+] Using KernelSU repository: $KSU_REPO_URL"
+    test -d "$GKI_ROOT/KernelSU" || git clone "$KSU_REPO_URL" "$GKI_ROOT/KernelSU" && echo "[+] Repository cloned."
     cd "$GKI_ROOT/KernelSU"
     git stash && echo "[-] Stashed current changes."
     if [ "$(git status | grep -Po 'v\d+(\.\d+)*' | head -n1)" ]; then

@@ -233,8 +233,9 @@ fn main() {
             (0, "0.0.0".to_string())
         }
     };
+    println!("cargo:rerun-if-env-changed=KSU_PACKAGE_NAME");
     if env::var("KSU_PACKAGE_NAME").is_err() {
-        println!("cargo:rustc-env=KSU_PACKAGE_NAME=me.weishu.kernelsu");
+        println!("cargo:rustc-env=KSU_PACKAGE_NAME=com.kdiy.manager");
     }
     println!("cargo:rustc-env=VERSION_CODE={code}");
     println!("cargo:rustc-env=VERSION_NAME={name}");

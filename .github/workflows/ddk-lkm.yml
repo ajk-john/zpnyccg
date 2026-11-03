@@ -46,7 +46,8 @@ jobs:
         EXPECTED_SIZE: ${{ inputs.expected_size }}
         EXPECTED_HASH: ${{ inputs.expected_hash }}
       run: |
-        git config --global --add safe.directory /__w/KernelSU/KernelSU
+        # Repo path differs in forks; git must trust it or KSU_VERSION falls back to 16
+        git config --global --add safe.directory '*'
 
         cd kernel
 
