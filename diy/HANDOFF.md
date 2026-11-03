@@ -15,7 +15,7 @@
 | 已移除的管理器特征 | `zygotePreloadName` / `useAppZygote` / `isolatedProcess`（jailbreak 自举，连同 `boot/` 三个类与 jni 辅助函数一起删除）、`ksu://` Manifest 过滤器（内部分发改走显式 Intent）、`hasFragileUserData` |
 | 签名证书 | 大小 `0x0315`，SHA-256 `3a0f8ed23ab431cb22bb0dbbca783b6719a2f644303ab5a6a6c37aa8ecf8311e`，公钥在 `diy/manager-cert.pem` |
 | GitHub 仓库 | `ajk-john/zpnyccg`，公开（remote `origin`），4 个签名 Secret 已配置 |
-| 最近成功构建 | 32695（`5e9f42cd`，改名后最终验证构建），已存到 `builds/32695-5e9f42cd/`；32694（`c77179b1`）同为改名后构建；全部构建见本地 `builds/README.md` |
+| 最近成功构建 | 32697（`5d473d0d`，反检测版），已存到 `builds/32697-5d473d0d/`；APK 文件名为 `Toolbox_*.apk`；32694/32695 为改名版、32697 为反检测版；全部构建见本地 `builds/README.md` |
 | 真机验证 | **未做** |
 
 ## 已定决策（不要擅自推翻，需要改先问用户）
@@ -72,3 +72,4 @@ git fetch upstream --tags && git merge vX.Y.Z              # 同步上游，之�
 - 2026-11-03 · Claude Code：按用户要求删除 GitHub Release 和 tag、停用 Release 工作流、移除 CI 归档；新增 `diy/fetch_builds.py` 本地保存产物；关闭检查更新；建立多 agent 环境（`AGENTS.md` DIY 节、`CLAUDE.md`、`GEMINI.md`、`.github/copilot-instructions.md`、本文件、`.githooks/pre-commit`）。
 - 2026-11-03 · Claude Code：构建 32691（`1ec2330e`）成功并用 `fetch_builds.py` 存到本地；确认 APK 里已不含仓库地址。本地 `builds/` 现有 32684、32685、32686、32691。
 - 2026-11-03 · DeepSeek Harness：管理器彻底改名——Kotlin 命名空间 `me.weishu.kernelsu`→`io.qzxnbqm.vktr`；Manifest 组件类名映射（App / HomeActivity / WebActivity / FetchService / boot.ZygoteService / boot.BootReceiver / boot.ZygotePreload / IAppInterface，magica 包→boot）；库名 `libkernelsu.so`→`libfshqpk.so`、`libksud.so`→`libnseqsv.so`（JNI 符号、FindClass、ksud `am start`、repack_apk.py、justfile 同步）；扩展 `diy/ksu_diy.py`（新增 `set-namespace`，`check` 增加命名空间/库名一致性校验与 APK dex 残留扫描）；清洗 dex 字符串特征（日志标签、User-Agent、导出文件名）。`check` 通过。已推 main：首轮 CI 因 `ZygotePreload` 与框架接口同名编译失败，改为 `AppPreload` 后构建 32694、32695（`5e9f42cd`）全绿；`check --apk`（含 dex/库名残留扫描）在 CI 与本地均通过，产物存 `builds/32695-5e9f42cd/`，dex 仅剩功能性 `*.kernelsu.org` URL 与 About 页上游链接。
+- 2026-11-03 · DeepSeek Harness（反春秋检测，用户报告 `[gpi,intent-profile]` 命中）：应用名改 `Toolbox`、launcher 图标换成中性工具箱矢量图；删除 Manifest 的 `ksu://` 过滤器、`zygotePreloadName`/`useAppZygote`/`isolatedProcess`（jailbreak 自举整体移除：`boot/` 三个类、jni.cc fork 辅助、首页按钮与设置里 BootReceiver 联动）、`hasFragileUserData`；`check` 新增对二进制 Manifest 指纹与 `ksu` scheme 的扫描（CI 的 repack 校验强制）。构建 32697（`5d473d0d`）全绿，`check --apk` 通过；resources.arsc 的 `app_name`=Toolbox，其余 `KernelSU` 字样为应用内文案/资源名（非包信息可见），如春秋仍命中再处理。待用户真机复测。
