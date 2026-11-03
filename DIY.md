@@ -1,6 +1,6 @@
 # KernelSU DIY：自定义管理器包名
 
-基于上游 [tiann/KernelSU](https://github.com/tiann/KernelSU) `v3.3.1`，管理器包名从 `me.weishu.kernelsu` 改为 **`com.kdiy.manager`**，并换成自己的签名密钥。
+基于上游 [tiann/KernelSU](https://github.com/tiann/KernelSU) `v3.3.1`，管理器包名从 `me.weishu.kernelsu` 改为 **`com.cioputlxxcc.knrudvpib`**，并换成自己的签名密钥。
 
 ## 原理：为什么不能只改 APK 包名
 
@@ -15,7 +15,7 @@
 
 | 位置 | 改动 |
 |---|---|
-| `kernel/Kbuild` | 默认包名 `com.kdiy.manager`（PR 构建 `.pr`），证书 size/hash 换成自己的 |
+| `kernel/Kbuild` | 默认包名 `com.cioputlxxcc.knrudvpib`（PR 构建 `.pr`），证书 size/hash 换成自己的 |
 | `userspace/ksud/build.rs` | ksud 默认包名（`boot-patch` 备份目录、`late-load` 重启管理器等用到），并在环境变量变化时重新生成 |
 | `manager/app/build.gradle.kts` | `applicationId` 默认值；新增 `-PKSU_UPDATE_REPO`（检查更新用哪个仓库的 Release） |
 | `manager/.../ui/util/Downloader.kt` | 检查更新不再指向官方仓库（官方 APK 包名/签名不同，装上也没法用）；未配置仓库时不检查 |
@@ -74,7 +74,7 @@ Kotlin 源码的命名空间（类名 `me.weishu.kernelsu.*`）保持不变，�
   curl -LSs "https://raw.githubusercontent.com/<你>/<仓库>/main/kernel/setup.sh" | KSU_REPO_URL=https://github.com/<你>/<仓库> bash -s main
   ```
   末尾的 `main`（或你自己的 tag）不能省。私有仓库请先手动 `git clone` 到内核根目录的 `KernelSU/` 再执行 `setup.sh`。也可以不改源码，在 make 时传 `KSU_PACKAGE_NAME=… KSU_EXPECTED_SIZE=… KSU_EXPECTED_HASH=…`。
-- **验证**：`adb shell dmesg | grep -i kernelsu` 应看到 `package name com.kdiy.manager` 和 `Crowning manager`；管理器首页显示「工作中」。
+- **验证**：`adb shell dmesg | grep -i kernelsu` 应看到 `package name com.cioputlxxcc.knrudvpib` 和 `Crowning manager`；管理器首页显示「工作中」。
 
 ## 改包名 / 换密钥
 
