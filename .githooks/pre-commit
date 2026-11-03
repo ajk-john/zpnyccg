@@ -1,0 +1,23 @@
+#!/bin/sh
+# KernelSU DIY guard, shared by every agent working in this repo.
+# Enable once per clone: git config core.hooksPath .githooks
+
+# Never commit signing material
+bad=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '(^|/)\.diy-secrets/|\.(jks|p12|pfx|keystore)$' || true)
+if [ -n "$bad" ]; then
+    echo "pre-commit: refusing to commit signing material:" >&2
+    echo "$bad" >&2
+    exit 1
+fi
+
+# Package name and certificate must agree across kernel, ksud, manager and CI.
+# On Windows `python3` may be the Store stub, so prefer `python` when it is Python 3.
+if python -c 'import sys; sys.exit(sys.version_info[0] != 3)' >/dev/null 2>&1; then
+    PY=python
+else
+    PY=python3
+fi
+if ! "$PY" diy/ksu_diy.py check >/dev/null; then
+    echo "pre-commit: diy/ksu_diy.py check failed" >&2
+    exit 1
+fi

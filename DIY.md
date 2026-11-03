@@ -17,13 +17,14 @@
 |---|---|
 | `kernel/Kbuild` | 默认包名 `com.cioputlxxcc.knrudvpib`（PR 构建 `.pr`），证书 size/hash 换成自己的 |
 | `userspace/ksud/build.rs` | ksud 默认包名（`boot-patch` 备份目录、`late-load` 重启管理器等用到），并在环境变量变化时重新生成 |
-| `manager/app/build.gradle.kts` | `applicationId` 默认值；新增 `-PKSU_UPDATE_REPO`（检查更新用哪个仓库的 Release） |
-| `manager/.../ui/util/Downloader.kt` | 检查更新不再指向官方仓库（官方 APK 包名/签名不同，装上也没法用）；未配置仓库时不检查 |
+| `manager/app/build.gradle.kts` | `applicationId` 默认值；新增 `-PKSU_UPDATE_REPO`（检查更新用哪个仓库的 Release，CI 不传，即关闭） |
+| `manager/.../ui/util/Downloader.kt` | 检查更新不再指向官方仓库（官方 APK 包名/签名不同，装上也没法用）；未配置仓库时不检查。目前关闭，APK 里不含仓库地址 |
 | `.github/workflows/*.yml` | PR 包名；LKM 容器里写死的 `/__w/KernelSU/KernelSU` 改为信任任意路径（否则 fork 后内核版本号退化为 16）；构建后自动校验 APK 签名与内核期望一致；Release 任务加 `contents: write` 权限 |
 | `kernel/setup.sh` | 支持 `KSU_REPO_URL` 指向自己的仓库，并固定克隆到 `KernelSU/` 目录 |
 | `diy/ksu_diy.py` | 一键改包名 / 换证书 / 一致性校验（纯标准库） |
 | `diy/manager-cert.pem` | 管理器签名的**公钥证书**（可以公开） |
-| `.github/workflows/archive-build.yml`、`BUILDS.md` | 每次构建的产物永久归档到 Release，并登记版本信息 |
+| `diy/fetch_builds.py` | 把 CI 构建产物保存到本地 `builds/` 并生成版本说明 |
+| `AGENTS.md`（开头一节）、`CLAUDE.md`、`GEMINI.md`、`.github/copilot-instructions.md`、`diy/HANDOFF.md`、`.githooks/` | 多 agent 协作环境，见「换 agent 继续开发」 |
 
 Kotlin 源码的命名空间（类名 `me.weishu.kernelsu.*`）保持不变，只改了 Android 识别的包名 `applicationId`，这样能和上游干净合并。若想连应用名也改，构建时加 `-PKSU_NAME=xxx`。
 
@@ -63,23 +64,40 @@ Kotlin 源码的命名空间（类名 `me.weishu.kernelsu.*`）保持不变，�
 
 3. 推送到 `main` 会自动运行 **Build Manager**（也可以在 Actions 页面手动 *Run workflow*）：先为各 KMI 编 LKM → 编 ksud（内嵌 LKM）→ 编管理器 → 用你的密钥重签。
    最后的 *Verify manager matches kernel expectations* 步骤会检查 APK 签名，Secret 填错会直接失败。
-4. 构建成功后 **Archive Build** 自动把产物永久归档到 Release，见下一节。管理器里的「检查更新」读的就是这个仓库最新的 Release。
+4. 构建成功后运行 `python diy/fetch_builds.py` 把产物保存到本地，见下一节。
 
-## 构建产物归档
+## 构建产物保存在本地
 
-Actions 页面的 Artifacts 90 天后会被 GitHub 删除，所以每次 `main` 构建成功后，`.github/workflows/archive-build.yml` 会：
+GitHub 上不放产物：不建 Release、不推 tag（*Release* 工作流已在 GitHub 上停用）。Actions 页面的 Artifacts 只是临时中转，90 天后会被 GitHub 删除，所以每次构建成功后运行：
 
-1. 下载这次构建的全部产物，用构建时那个提交的配置再校验一遍 APK 签名；
-2. 创建 Release，tag 为 `v<上游版本>-diy.<构建号>`（例如 `v3.3.1-diy.32686`），附上管理器 APK、全部 LKM、ksud、ksuinit、混淆映射、`SHA256SUMS.txt` 和 `BUILD_INFO.md`（版本信息）；
-3. 在 [BUILDS.md](BUILDS.md) 的表格里登记一行（构建号、时间、提交、上游基线、包名、证书、Release 链接），并由 CI 提交到 `main`。
+```bash
+python diy/fetch_builds.py
+```
 
-所以本地再提交前要先 `git pull`。归档 tag 打在 DIY 提交上，之后的构建版本名会变成 `v3.3.1-diy.32686-2-gxxxxxxx` 这种形式，`setup.sh` 不传参数时也会检出最新的归档 tag（包名正确）。
+它会把所有还没保存过的成功构建下载到 `builds/<构建号>-<提交>/`（已 gitignore，每次约 90 MB）：
 
-- **补归档 / 重新归档**：Actions → *Archive Build* → *Run workflow*，填 Build Manager 那次运行的 ID（运行页面 URL 末尾的数字），产物需未过期。同一构建重复归档会覆盖同一个 Release 和同一行记录。
-- **下载到本地**：
-  ```bash
-  gh release download v3.3.1-diy.32686 -R ajk-john/zpnyccg -D builds/v3.3.1-diy.32686
-  ```
+- 管理器 APK、16 个 LKM、8 个 ksud、3 个 ksuinit、混淆映射 zip；
+- `BUILD_INFO.md`：构建号、版本名、上游基线、提交、构建时间、包名、证书、KMI 列表、每个文件的用途 / 大小 / SHA-256；
+- `SHA256SUMS.txt`、`build.json`（同样信息的机器可读版本）。
+
+`builds/README.md` 是全部本地构建的总表。保存前会按构建时那次提交的配置校验 APK 签名，不一致会直接报错。
+
+- 重新保存某一次：`python diy/fetch_builds.py --run <Build Manager 运行 ID>`
+- 只重建总表：`python diy/fetch_builds.py --index-only`
+
+## 换 agent 继续开发
+
+本仓库按「所有 agent 共用一份说明」组织，换成 Codex、Cursor、Gemini CLI、Copilot 等都能接着做：
+
+| 文件 | 作用 |
+|---|---|
+| `AGENTS.md` | 总说明。开头的「DIY fork」一节是硬性规则，其后是上游开发指南。Codex、Cursor、Copilot、Windsurf 等直接读取 |
+| `CLAUDE.md` / `GEMINI.md` | Claude Code / Gemini CLI 的入口，只引用 `AGENTS.md` |
+| `.github/copilot-instructions.md` | Copilot 入口，指向上面两个文件 |
+| `diy/HANDOFF.md` | 交接文档：当前状态、已定决策、本机环境、常用命令、待办、工作日志。**每个 agent 结束前更新** |
+| `.githooks/pre-commit` | 提交前拒绝签名材料、检查包名 / 证书一致性，对所有 agent 生效 |
+
+切换时让新 agent 先读 `AGENTS.md` 和 `diy/HANDOFF.md` 即可。在别的位置重新克隆时，按 `diy/HANDOFF.md`「本机环境」里的命令恢复 git 本地配置（钩子、凭据），并把 `.diy-secrets/` 复制过去。
 
 ## 刷入与使用
 

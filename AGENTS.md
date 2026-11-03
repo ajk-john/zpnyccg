@@ -1,5 +1,20 @@
 # KernelSU Agent Guide
 
+## DIY fork：先读这一节
+
+本仓库是 KernelSU 的二次开发版：管理器包名改为非官方值、换了自己的签名证书，其余功能与上游一致。任何 agent（Claude Code / Codex / Cursor / Gemini CLI / Copilot 等）开始工作前：
+
+1. 读 `diy/HANDOFF.md`：当前状态、已定决策、本机环境、常用命令、待办。**结束会话前必须更新它**（当前状态 + 工作日志），下一个 agent 只靠它接手。
+2. 需要原理或操作细节时读 `DIY.md`。
+
+硬性规则：
+
+- **包名 / 签名证书**在内核、ksud、管理器、CI 四处必须一致。只用 `python diy/ksu_diy.py set-package|set-cert` 修改，提交前 `python diy/ksu_diy.py check`（pre-commit 钩子也会检查）。
+- **`.diy-secrets/` 是签名私钥**：不要输出到对话或日志，不要提交，不要上传到 GitHub Secrets 以外的任何地方。
+- **GitHub 上不放产物**：不创建 Release、不推送 tag。构建产物只用 `python diy/fetch_builds.py` 保存到本地 `builds/`（已 gitignore）。
+- **本机没有 JDK / Android SDK / Rust**：下文要求的 `cargo ndk` / `gradlew` 检查无法在本地运行。改动推送到 `main` 后由 GitHub Actions 的 *Build Manager* 编译验证。
+- Kotlin 命名空间保持 `me.weishu.kernelsu`，只改 `applicationId`，减少与上游合并的冲突。
+
 ## Agent Quick Start
 
 - For significant features or refactors, sketch an Plan first; keep it updated as you work.

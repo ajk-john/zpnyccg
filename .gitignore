@@ -16,3 +16,7 @@ __pycache__
 *.p12
 *.keystore
 /builds/
+
+# Agent entry files are part of this fork (upstream ignores them)
+!CLAUDE.md
+!AGENTS.md

@@ -197,7 +197,7 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             ./gradlew clean assembleRelease -PIS_PR_BUILD=true
           else
-            ./gradlew clean assembleRelease -PKSU_UPDATE_REPO=${{ github.repository }}
+            ./gradlew clean assembleRelease
           fi
 
       - name: Upload build artifact
