@@ -83,6 +83,7 @@ LITERAL_RENAMES = [
     ('"KsuService"', '"AppService"'),
     ("KsuService disconnected", "App service disconnected"),
     ("ksu_size.txt", "app_size.txt"),
+    ("kernelsu-tmp-lkm.ko", "tmp-lkm.ko"),
     ('"ksu failed: "', '"daemon failed: "'),
 ]
 
