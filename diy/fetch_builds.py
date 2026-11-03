@@ -106,7 +106,7 @@ def describe(name: str) -> str:
 
 
 def file_order(name: str):
-    for i, prefix in enumerate(("KernelSU", "lkm-aarch64", "lkm-x86_64", "ksud-", "ksuinit-", "mappings-")):
+    for i, prefix in enumerate(("Toolbox", "KernelSU", "lkm-aarch64", "lkm-x86_64", "ksud-", "ksuinit-", "mappings-")):
         if name.startswith(prefix):
             return (i, name)
     return (9, name)

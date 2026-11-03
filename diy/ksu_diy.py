@@ -119,8 +119,6 @@ TEXT_SUFFIXES = {
 TEXT_NAMES = {"CMakeLists.txt"}
 
 NS_GRADLE_RE = re.compile(r'(namespace = ")([^"]+)(")')
-NS_ZYGOTE_RE = re.compile(r'(zygotePreloadName=")([A-Za-z0-9_.]+)(\.boot\.AppPreload")')
-NS_ACTION_RE = re.compile(r'(android:name=")([A-Za-z0-9_.]+)(\.boot\.LAUNCH" )')
 NS_LATELOAD_RE = re.compile(r'(\{package_name\}/)([A-Za-z0-9_.]+)(\.ui\.HomeActivity)')
 NS_JNI_RE = re.compile(r"Java_([A-Za-z0-9_]+)_Natives_")
 NS_FINDCLASS_RE = re.compile(r'FindClass\("([A-Za-z0-9_/]+)/Natives\$Profile"\)')
@@ -129,10 +127,18 @@ MANIFEST_COMPONENTS = [
     ".App",
     ".ui.HomeActivity",
     ".ui.webui.WebActivity",
-    ".boot.ZygoteService",
-    ".boot.BootReceiver",
     ".ui.util.FetchService",
 ]
+
+# Kernel-manager traits that must not be shipped in the manifest (they are
+# readable through PackageManager and used by detectors such as 春秋).
+FORBIDDEN_MANIFEST_TRAITS = (
+    "zygotePreloadName",
+    "useAppZygote",
+    "isolatedProcess",
+    "hasFragileUserData",
+    'scheme="ksu"',
+)
 
 # Must mirror kernel/manager/apk_sign.c
 CERT_MAX_LENGTH = 1024
@@ -406,25 +412,18 @@ def verify_namespace(ns: str) -> list:
         "ksud late_load.rs am-start component",
         read_one(LATE_LOAD_RS, NS_LATELOAD_RE, 2, "late-load component"),
     )
-    expect_equal(
-        "manager AndroidManifest.xml zygotePreloadName",
-        read_one(MANAGER_MANIFEST, NS_ZYGOTE_RE, 2, "zygote preload class"),
-    )
-    expect_equal(
-        "manager AndroidManifest.xml boot action",
-        read_one(MANAGER_MANIFEST, NS_ACTION_RE, 2, "boot action"),
-    )
 
     manifest = read_text(MANAGER_MANIFEST)
     for component in MANIFEST_COMPONENTS:
         if f'android:name="{component}"' not in manifest:
             errors.append(f"manifest is missing component {component}")
-    if 'android:process=":boot"' not in manifest:
-        errors.append('manifest is missing process ":boot"')
+    for trait in FORBIDDEN_MANIFEST_TRAITS:
+        if trait in manifest:
+            errors.append(f"manifest still carries kernel-manager fingerprint {trait!r}")
 
     jni_cc = read_text(JNI_CC)
-    if f"Java_{ns_under}_boot_AppPreload_forkDontCareAndExecDaemon" not in jni_cc:
-        errors.append("jni.cc is missing the renamed AppPreload JNI symbol")
+    if "forkDontCareAndExecDaemon" in jni_cc:
+        errors.append("jni.cc still contains the app-zygote bootstrap helper")
 
     aidl = MANAGER_AIDL.joinpath(*ns.split("."), "IAppInterface.aidl")
     if not aidl.is_file():
@@ -444,7 +443,6 @@ def verify_namespace(ns: str) -> list:
     for line in (
         f"-keep class {ns}.Natives {{ *; }}",
         f"-keep class {ns}.Natives$Profile {{ *; }}",
-        f"-keep class {ns}.boot.AppPreload {{ *; }}",
     ):
         if line not in proguard:
             errors.append(f"proguard-rules.pro is missing: {line}")
@@ -458,13 +456,6 @@ def verify_namespace(ns: str) -> list:
     natives_kt = MANAGER_JAVA.joinpath(*ns.split("."), "Natives.kt")
     if f'System.loadLibrary("{JNI_LIB_NAME}")' not in read_text(natives_kt):
         errors.append(f"{natives_kt.relative_to(ROOT)} does not load {JNI_LIB_NAME}")
-
-    preload = MANAGER_JAVA.joinpath(*ns.split("."), "boot", "AppPreload.java")
-    preload_text = read_text(preload)
-    if f'System.loadLibrary("{JNI_LIB_NAME}")' not in preload_text:
-        errors.append(f"{preload.relative_to(ROOT)} does not load {JNI_LIB_NAME}")
-    if DAEMON_LIB not in preload_text:
-        errors.append(f"{preload.relative_to(ROOT)} does not reference {DAEMON_LIB}")
 
     ksucli = MANAGER_JAVA.joinpath(*ns.split("."), "ui", "util", "KsuCli.kt")
     if DAEMON_LIB not in read_text(ksucli):
@@ -495,6 +486,17 @@ def check_apk_contents(path: Path, errors: list, notes: list) -> None:
         for name in names:
             if name.endswith("libkernelsu.so") or name.endswith("libksud.so"):
                 errors.append(f"{path}: still contains {name}")
+        manifest = z.read("AndroidManifest.xml")
+        for trait in (
+            "zygotePreloadName",
+            "useAppZygote",
+            "isolatedProcess",
+            "hasFragileUserData",
+        ):
+            if trait.encode("utf-8") in manifest or trait.encode("utf-16-le") in manifest:
+                errors.append(f"{path}: binary manifest still contains {trait!r}")
+        if "ksu".encode("utf-16-le") in manifest:
+            errors.append(f"{path}: binary manifest still declares the ksu deep-link scheme")
         for member in names:
             if not re.fullmatch(r"classes\d*\.dex", member):
                 continue

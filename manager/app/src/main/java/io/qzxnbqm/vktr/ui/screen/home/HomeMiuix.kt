@@ -391,15 +391,7 @@ private fun StatusCard(
                                     tint = colorScheme.onBackground,
                                 )
                             },
-                            endActions = {
-                                if (state.isSELinuxPermissive) {
-                                    TextButton(
-                                        text = stringResource(R.string.home_jailbreak),
-                                        onClick = actions.onJailbreakClick,
-                                        colors = ButtonDefaults.textButtonColorsPrimary()
-                                    )
-                                }
-                            }
+                            endActions = {}
                         )
                     }
                 }

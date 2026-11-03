@@ -11,6 +11,8 @@
 | 管理器包名 | `com.cioputlxxcc.knrudvpib`（PR 构建为 `….pr`） |
 | Kotlin 命名空间 | `io.qzxnbqm.vktr`（含组件类名，如 `ui.HomeActivity`；JNI 符号、ksud `am start` 同步） |
 | 打包库名 | JNI `libfshqpk.so`（原 libkernelsu.so）、守护进程 `libnseqsv.so`（原 libksud.so）；`libadbroot.so` 未改名（仅 root 可见） |
+| 应用名 / 图标 | launcher 显示名 **`Toolbox`**（纯色工具箱矢量图标），原 KernelSU 图标已替换 |
+| 已移除的管理器特征 | `zygotePreloadName` / `useAppZygote` / `isolatedProcess`（jailbreak 自举，连同 `boot/` 三个类与 jni 辅助函数一起删除）、`ksu://` Manifest 过滤器（内部分发改走显式 Intent）、`hasFragileUserData` |
 | 签名证书 | 大小 `0x0315`，SHA-256 `3a0f8ed23ab431cb22bb0dbbca783b6719a2f644303ab5a6a6c37aa8ecf8311e`，公钥在 `diy/manager-cert.pem` |
 | GitHub 仓库 | `ajk-john/zpnyccg`，公开（remote `origin`），4 个签名 Secret 已配置 |
 | 最近成功构建 | 32695（`5e9f42cd`，改名后最终验证构建），已存到 `builds/32695-5e9f42cd/`；32694（`c77179b1`）同为改名后构建；全部构建见本地 `builds/README.md` |
@@ -24,6 +26,7 @@
 4. 仓库公开，名称 `zpnyccg`，仓库名和描述不出现 KernelSU 字样（用户希望只有自己能搜到）。
 5. 管理器的「检查更新」关闭（CI 不再传 `KSU_UPDATE_REPO`），APK 里不嵌入仓库地址。
 6. 不向 `origin` 推送上游 tag（会触发构建且 `setup.sh` 会检出官方包名的版本）。
+7. 为规避春秋检测（`gpi` + `intent-profile`）已做隐藏：应用名 `Toolbox`、中性图标、移除 `ksu://` 过滤器与 magica 自举相关 Manifest 特征（用户 2026-11-03 同意）。`diy/ksu_diy.py check` 会拦截这些特征被重新引入；不要回退。
 
 ## 本机环境
 
@@ -49,7 +52,7 @@ gh workflow run build-manager.yml -R ajk-john/zpnyccg --ref main   # 手动触�
 gh run list -R ajk-john/zpnyccg --workflow build-manager.yml --limit 5
 gh run watch <run-id> -R ajk-john/zpnyccg --exit-status
 python diy/fetch_builds.py                                 # 把所有未保存的成功构建下载到 builds/
-python diy/ksu_diy.py check --apk builds/<目录>/KernelSU_*.apk
+python diy/ksu_diy.py check --apk builds/<目录>/Toolbox_*.apk
 git fetch upstream --tags && git merge vX.Y.Z              # 同步上游，之后跑 check
 ```
 
@@ -58,9 +61,10 @@ git fetch upstream --tags && git merge vX.Y.Z              # 同步上游，之�
 
 ## 进行中 / 待办
 
-- [ ] 真机验证：卸载官方 KernelSU → 安装 `builds/` 中最新 APK（用 32694 及以后；32684–32686 的 APK 里还嵌着仓库地址） → 修补 boot / init_boot → 刷入 → `dmesg | grep -i kernelsu` 看到新包名和 `Crowning manager`。改名后的构建（新命名空间/库名）需重点验证 magica 自举、root 授权、模块 WebUI 入口。
+- [ ] 真机验证：卸载官方 KernelSU → 安装 `builds/` 中最新 APK（32694 及以后的改名版；jailbreak 自举已删除） → 修补 boot / init_boot → 刷入 → `dmesg | grep -i kernelsu` 看到新包名和 `Crowning manager`。重点验证 root 授权、模块安装、模块 WebUI 入口。
+- [ ] **春秋复测**：安装最新构建后用春秋再扫一遍，预期不再出现 `[gpi,intent-profile]`。若仍命中，下一步候选：替换 dex/资源里的残留品牌字符串（`Theme.KernelSU` 资源名、About 页链接）、检查包可见性/`<queries>`，或配合应用隐藏模块。
 - [ ] Dependabot 在 GitHub 上开了 3 个依赖升级 PR（#1 crates、#2 website npm、#3 maven，其中 #3 的构建失败）。待用户决定是否保留 `.github/dependabot.yml`。
-- [ ] 剩余可见特征（按需决定是否继续隐藏）：应用显示名 `KernelSU`（resValue，`-PKSU_NAME` 可改）、About 页上游 GitHub/Telegram 链接、官方模块仓库/模板/WebUI URL（`modules.kernelsu.org`、`kernelsu.org/templates`、`mui.kernelsu.org`，功能依赖）、`ksu://` 深链 scheme（模块生态契约）、SELinux 域 `u:r:ksu:s0`、`/data/adb/ksud` 路径与 `ksud` CLI（仅 root 可见）、`libadbroot.so`（仅 root 可见）、ksud 二进制内字符串。
+- [ ] 剩余可见特征（按需决定是否继续隐藏）：About 页上游 GitHub/Telegram 链接、官方模块仓库/模板/WebUI URL（`modules.kernelsu.org`、`kernelsu.org/templates`、`mui.kernelsu.org`，功能依赖）、资源名 `Theme.KernelSU`（scripts 可见）、启动页仍是旧 logo 动画、SELinux 域 `u:r:ksu:s0`、`/data/adb/ksud` 路径与 `ksud` CLI（仅 root 可见）、`libadbroot.so`（仅 root 可见）、ksud 二进制内字符串。
 
 ## 工作日志
 

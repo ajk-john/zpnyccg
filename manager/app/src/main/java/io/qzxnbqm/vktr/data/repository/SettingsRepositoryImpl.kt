@@ -1,8 +1,6 @@
 package io.qzxnbqm.vktr.data.repository
 
-import android.content.ComponentName
 import android.content.Context
-import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.content.edit
 import com.materialkolor.PaletteStyle
@@ -10,7 +8,6 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import com.topjohnwu.superuser.ShellUtils
 import io.qzxnbqm.vktr.Natives
 import io.qzxnbqm.vktr.ksuApp
-import io.qzxnbqm.vktr.boot.BootReceiver
 import io.qzxnbqm.vktr.ui.UiMode
 import io.qzxnbqm.vktr.ui.screen.modulerepo.RepoSort
 import io.qzxnbqm.vktr.ui.util.execKsud
@@ -150,20 +147,7 @@ class SettingsRepositoryImpl : SettingsRepository {
 
     override var autoJailbreak: Boolean
         get() = prefs.getBoolean("auto_jailbreak", false)
-        set(value) {
-            runCatching {
-                ksuApp.packageManager.setComponentEnabledSetting(
-                    ComponentName(ksuApp, BootReceiver::class.java),
-                    if (value) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP
-                )
-            }.onFailure {
-                Log.e("Settings", "failed to change boot receiver state to $value", it)
-            }
-            prefs.edit {
-                putBoolean("auto_jailbreak", value)
-            }
-        }
+        set(value) = prefs.edit { putBoolean("auto_jailbreak", value) }
 
     override var useSoftReboot: Boolean
         get() = prefs.getBoolean(KEY_USE_SOFT_REBOOT, false)

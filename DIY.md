@@ -17,7 +17,9 @@
 |---|---|
 | `kernel/Kbuild` | 默认包名 `com.cioputlxxcc.knrudvpib`（PR 构建 `.pr`），证书 size/hash 换成自己的 |
 | `userspace/ksud/build.rs` | ksud 默认包名（`boot-patch` 备份目录、`late-load` 重启管理器等用到），并在环境变量变化时重新生成 |
-| `manager/app/build.gradle.kts` | `applicationId` 默认值；新增 `-PKSU_UPDATE_REPO`（检查更新用哪个仓库的 Release，CI 不传，即关闭） |
+| `manager/app/build.gradle.kts` | `applicationId` 默认值；`namespace` 改为 `io.qzxnbqm.vktr`；应用名默认 `Toolbox`；新增 `-PKSU_UPDATE_REPO`（检查更新用哪个仓库的 Release，CI 不传，即关闭） |
+| `manager/app/src/main/AndroidManifest.xml` | 组件名映射（`diy/ksu_diy.py` 里固化）；移除 `ksu://` 深链过滤器、`zygotePreloadName` / `useAppZygote` / `isolatedProcess`（jailbreak 自举）、`hasFragileUserData`，避免被按包信息/Intent 探测 |
+| `manager/app/src/main/res/drawable/ic_launcher_*` | 换成中性的工具箱图标（不再使用官方 logo） |
 | `manager/.../ui/util/Downloader.kt` | 检查更新不再指向官方仓库（官方 APK 包名/签名不同，装上也没法用）；未配置仓库时不检查。目前关闭，APK 里不含仓库地址 |
 | `.github/workflows/*.yml` | PR 包名；LKM 容器里写死的 `/__w/KernelSU/KernelSU` 改为信任任意路径（否则 fork 后内核版本号退化为 16）；构建后自动校验 APK 签名与内核期望一致；Release 任务加 `contents: write` 权限 |
 | `kernel/setup.sh` | 支持 `KSU_REPO_URL` 指向自己的仓库，并固定克隆到 `KernelSU/` 目录 |
@@ -26,7 +28,9 @@
 | `diy/fetch_builds.py` | 把 CI 构建产物保存到本地 `builds/` 并生成版本说明 |
 | `AGENTS.md`（开头一节）、`CLAUDE.md`、`GEMINI.md`、`.github/copilot-instructions.md`、`diy/HANDOFF.md`、`.githooks/` | 多 agent 协作环境，见「换 agent 继续开发」 |
 
-Kotlin 命名空间、Manifest 组件类名和打包库名也已改成非官方值（见上表）。合并上游后跑 `python diy/ksu_diy.py set-namespace io.qzxnbqm.vktr` 重新套用改名（命名空间、组件类名、JNI 符号、库名的映射都固化在该脚本里）；`set-package` 不影响命名空间，需要改命名空间时另跑 `set-namespace`。应用显示名仍为 KernelSU，若想改，构建时加 `-PKSU_NAME=xxx`。
+Kotlin 命名空间、Manifest 组件类名和打包库名也已改成非官方值（见上表）。合并上游后跑 `python diy/ksu_diy.py set-namespace io.qzxnbqm.vktr` 重新套用改名（命名空间、组件类名、JNI 符号、库名的映射都固化在该脚本里）；`set-package` 不影响命名空间，需要改命名空间时另跑 `set-namespace`。应用显示名默认 `Toolbox`，构建时加 `-PKSU_NAME=xxx` 可改。
+
+管理器的隐藏特征（`ksu://` 过滤器、jailbreak 自举、`hasFragileUserData`）是手工删除的，`python3 diy/ksu_diy.py check` 会拦截它们被重新引入；合并上游后若这些文件/属性重新出现，需要再删一次。
 
 ## 签名密钥（重要）
 
