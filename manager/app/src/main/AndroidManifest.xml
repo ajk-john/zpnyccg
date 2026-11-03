@@ -23,7 +23,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
         android:theme="@style/Theme.KernelSU"
-        android:zygotePreloadName="io.qzxnbqm.vktr.boot.ZygotePreload">
+        android:zygotePreloadName="io.qzxnbqm.vktr.boot.AppPreload">
         <activity
             android:name=".ui.HomeActivity"
             android:exported="true"

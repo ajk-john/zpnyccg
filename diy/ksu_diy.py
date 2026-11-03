@@ -65,7 +65,7 @@ IDENTIFIER_RENAMES = [
     ("KernelSUMagica", "AppBoot"),
     ("KernelSUApplication", "App"),
     ("BootCompletedReceiver", "BootReceiver"),
-    ("AppZygotePreload", "ZygotePreload"),
+    ("AppZygotePreload", "AppPreload"),
     ("MagicaService", "ZygoteService"),
     ("WebUIActivity", "WebActivity"),
     ("DownloadService", "FetchService"),
@@ -118,7 +118,7 @@ TEXT_SUFFIXES = {
 TEXT_NAMES = {"CMakeLists.txt"}
 
 NS_GRADLE_RE = re.compile(r'(namespace = ")([^"]+)(")')
-NS_ZYGOTE_RE = re.compile(r'(zygotePreloadName=")([A-Za-z0-9_.]+)(\.boot\.ZygotePreload")')
+NS_ZYGOTE_RE = re.compile(r'(zygotePreloadName=")([A-Za-z0-9_.]+)(\.boot\.AppPreload")')
 NS_ACTION_RE = re.compile(r'(android:name=")([A-Za-z0-9_.]+)(\.boot\.LAUNCH" )')
 NS_LATELOAD_RE = re.compile(r'(\{package_name\}/)([A-Za-z0-9_.]+)(\.ui\.HomeActivity)')
 NS_JNI_RE = re.compile(r"Java_([A-Za-z0-9_]+)_Natives_")
@@ -422,8 +422,8 @@ def verify_namespace(ns: str) -> list:
         errors.append('manifest is missing process ":boot"')
 
     jni_cc = read_text(JNI_CC)
-    if f"Java_{ns_under}_boot_ZygotePreload_forkDontCareAndExecDaemon" not in jni_cc:
-        errors.append("jni.cc is missing the renamed ZygotePreload JNI symbol")
+    if f"Java_{ns_under}_boot_AppPreload_forkDontCareAndExecDaemon" not in jni_cc:
+        errors.append("jni.cc is missing the renamed AppPreload JNI symbol")
 
     aidl = MANAGER_AIDL.joinpath(*ns.split("."), "IAppInterface.aidl")
     if not aidl.is_file():
@@ -443,7 +443,7 @@ def verify_namespace(ns: str) -> list:
     for line in (
         f"-keep class {ns}.Natives {{ *; }}",
         f"-keep class {ns}.Natives$Profile {{ *; }}",
-        f"-keep class {ns}.boot.ZygotePreload {{ *; }}",
+        f"-keep class {ns}.boot.AppPreload {{ *; }}",
     ):
         if line not in proguard:
             errors.append(f"proguard-rules.pro is missing: {line}")
@@ -458,7 +458,7 @@ def verify_namespace(ns: str) -> list:
     if f'System.loadLibrary("{JNI_LIB_NAME}")' not in read_text(natives_kt):
         errors.append(f"{natives_kt.relative_to(ROOT)} does not load {JNI_LIB_NAME}")
 
-    preload = MANAGER_JAVA.joinpath(*ns.split("."), "boot", "ZygotePreload.java")
+    preload = MANAGER_JAVA.joinpath(*ns.split("."), "boot", "AppPreload.java")
     preload_text = read_text(preload)
     if f'System.loadLibrary("{JNI_LIB_NAME}")' not in preload_text:
         errors.append(f"{preload.relative_to(ROOT)} does not load {JNI_LIB_NAME}")

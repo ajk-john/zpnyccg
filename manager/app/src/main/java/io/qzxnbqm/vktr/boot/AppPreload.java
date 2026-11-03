@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 
 import java.io.File;
 
-public class ZygotePreload implements ZygotePreload {
+public class AppPreload implements ZygotePreload {
     public static final String TAG = "AppBoot";
 
     private static native void forkDontCareAndExecDaemon(String ksudPath, String packageName);

@@ -412,7 +412,7 @@ int fork_dont_care_and_exec_daemon(const char *path, const char *pkg) {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_io_qzxnbqm_vktr_boot_ZygotePreload_forkDontCareAndExecDaemon(JNIEnv *env, jclass clazz,
+Java_io_qzxnbqm_vktr_boot_AppPreload_forkDontCareAndExecDaemon(JNIEnv *env, jclass clazz,
                                                                         jstring ksud_path, jstring pkg_name) {
     auto path = env->GetStringUTFChars(ksud_path, nullptr);
     auto pkg = env->GetStringUTFChars(pkg_name, nullptr);

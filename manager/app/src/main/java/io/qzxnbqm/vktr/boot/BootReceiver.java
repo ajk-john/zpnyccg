@@ -1,6 +1,6 @@
 package io.qzxnbqm.vktr.boot;
 
-import static io.qzxnbqm.vktr.boot.ZygotePreload.TAG;
+import static io.qzxnbqm.vktr.boot.AppPreload.TAG;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
