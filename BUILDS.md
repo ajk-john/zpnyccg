@@ -12,6 +12,7 @@
 
 | 构建号 | 构建时间 (UTC+8) | 提交 | 上游基线 | 管理器包名 | 签名证书 | 产物 |
 |---|---|---|---|---|---|---|
+| 32686 | 2026-11-03 19:59 | [`6c0ff2a5`](https://github.com/ajk-john/zpnyccg/commit/6c0ff2a5911a8052e678e6bb6d1317855f3343db) diy: Change manager package name to com.cioputlxxcc.knrudvpib | v3.3.1 | `com.cioputlxxcc.knrudvpib` | `0x0315` `3a0f8ed23ab4…` | [v3.3.1-diy.32686](https://github.com/ajk-john/zpnyccg/releases/tag/v3.3.1-diy.32686) |
 | 32685 | 2026-11-03 19:35 | [`37fd9da4`](https://github.com/ajk-john/zpnyccg/commit/37fd9da449c099a69448b0693d0bdac1f49b4065) ci: Allow manual Build Manager runs | v3.3.1 | `com.kdiy.manager` | `0x0315` `3a0f8ed23ab4…` | [v3.3.1-diy.32685](https://github.com/ajk-john/zpnyccg/releases/tag/v3.3.1-diy.32685) |
 
 <!-- BUILDS:END -->
