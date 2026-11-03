@@ -130,7 +130,9 @@ jobs:
           done
           for dir in artifacts/ksud-* artifacts/ksuinit-*; do
             [ -d "$dir" ] || continue
-            for f in "$dir"/*; do
+            # ksud-extra also uploads cargo's ksud.d dep-info file; keep only the binaries
+            for f in "$dir"/ksud "$dir"/ksud.exe "$dir"/ksuinit; do
+              [ -f "$f" ] || continue
               ext=""
               case "$f" in *.exe) ext=.exe ;; esac
               cp "$f" "release/$(basename "$dir")$ext"
@@ -272,6 +274,13 @@ jobs:
           builds.write_text(f"{head}{start}\n\n{table}\n\n{end}{tail}", encoding="utf-8")
           EOF
           cat release/BUILD_INFO.md
+
+      - name: Drop previous archive of this build
+        env:
+          TAG: ${{ steps.info.outputs.tag }}
+        run: |
+          # Re-archiving replaces the release so no stale assets survive; the tag is kept
+          gh release delete "$TAG" -R "$GITHUB_REPOSITORY" --yes 2>/dev/null || true
 
       - name: Publish release
         uses: softprops/action-gh-release@v3
