@@ -12,7 +12,7 @@
     <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />
 
     <application
-        android:name=".KernelSUApplication"
+        android:name=".App"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:directBootAware="true"
@@ -23,9 +23,9 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
         android:theme="@style/Theme.KernelSU"
-        android:zygotePreloadName="me.weishu.kernelsu.magica.AppZygotePreload">
+        android:zygotePreloadName="io.qzxnbqm.vktr.boot.ZygotePreload">
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.HomeActivity"
             android:exported="true"
             android:theme="@style/Theme.KernelSU.Starting"
             android:windowSoftInputMode="adjustResize">
@@ -64,7 +64,7 @@
         </activity>
 
         <activity
-            android:name=".ui.webui.WebUIActivity"
+            android:name=".ui.webui.WebActivity"
             android:autoRemoveFromRecents="true"
             android:configChanges="density|orientation|screenSize|screenLayout|smallestScreenSize|uiMode|locale|layoutDirection|fontScale|keyboard|keyboardHidden"
             android:documentLaunchMode="intoExisting"
@@ -83,29 +83,29 @@
         </provider>
 
         <service
-            android:name=".magica.MagicaService"
+            android:name=".boot.ZygoteService"
             android:directBootAware="true"
             android:exported="false"
             android:isolatedProcess="true"
             android:useAppZygote="true" />
 
         <service
-            android:name=".ui.util.DownloadService"
+            android:name=".ui.util.FetchService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
         <receiver
-            android:name=".magica.BootCompletedReceiver"
+            android:name=".boot.BootReceiver"
             android:directBootAware="true"
             android:enabled="false"
             android:exported="false"
-            android:process=":magica_boot">
+            android:process=":boot">
             <intent-filter>
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
             <intent-filter>
-                <action android:name="me.weishu.kernelsu.magica.LAUNCH" />
+                <action android:name="io.qzxnbqm.vktr.boot.LAUNCH" />
             </intent-filter>
         </receiver>
     </application>

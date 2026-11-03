@@ -1,6 +1,6 @@
-# KernelSU DIY：自定义管理器包名
+# KernelSU DIY：自定义管理器身份（包名 / 命名空间 / 库名 / 签名）
 
-基于上游 [tiann/KernelSU](https://github.com/tiann/KernelSU) `v3.3.1`，管理器包名从 `me.weishu.kernelsu` 改为 **`com.cioputlxxcc.knrudvpib`**，并换成自己的签名密钥。
+基于上游 [tiann/KernelSU](https://github.com/tiann/KernelSU) `v3.3.1`：管理器包名从 `me.weishu.kernelsu` 改为 **`com.cioputlxxcc.knrudvpib`**，Kotlin 命名空间与 Manifest 组件类名改为 **`io.qzxnbqm.vktr`**（JNI 符号、ksud `am start` 组件名同步），打包库名改为随机名（JNI `libfshqpk.so`、守护进程 `libnseqsv.so`），并换成自己的签名密钥。
 
 ## 原理：为什么不能只改 APK 包名
 
@@ -21,12 +21,12 @@
 | `manager/.../ui/util/Downloader.kt` | 检查更新不再指向官方仓库（官方 APK 包名/签名不同，装上也没法用）；未配置仓库时不检查。目前关闭，APK 里不含仓库地址 |
 | `.github/workflows/*.yml` | PR 包名；LKM 容器里写死的 `/__w/KernelSU/KernelSU` 改为信任任意路径（否则 fork 后内核版本号退化为 16）；构建后自动校验 APK 签名与内核期望一致；Release 任务加 `contents: write` 权限 |
 | `kernel/setup.sh` | 支持 `KSU_REPO_URL` 指向自己的仓库，并固定克隆到 `KernelSU/` 目录 |
-| `diy/ksu_diy.py` | 一键改包名 / 换证书 / 一致性校验（纯标准库） |
+| `diy/ksu_diy.py` | 一键改包名 / 换证书 / 改命名空间与库名（`set-namespace`，含组件类名映射）/ 一致性校验（`check` 还会扫描 APK dex 里是否残留官方命名空间）（纯标准库） |
 | `diy/manager-cert.pem` | 管理器签名的**公钥证书**（可以公开） |
 | `diy/fetch_builds.py` | 把 CI 构建产物保存到本地 `builds/` 并生成版本说明 |
 | `AGENTS.md`（开头一节）、`CLAUDE.md`、`GEMINI.md`、`.github/copilot-instructions.md`、`diy/HANDOFF.md`、`.githooks/` | 多 agent 协作环境，见「换 agent 继续开发」 |
 
-Kotlin 源码的命名空间（类名 `me.weishu.kernelsu.*`）保持不变，只改了 Android 识别的包名 `applicationId`，这样能和上游干净合并。若想连应用名也改，构建时加 `-PKSU_NAME=xxx`。
+Kotlin 命名空间、Manifest 组件类名和打包库名也已改成非官方值（见上表）。合并上游后跑 `python diy/ksu_diy.py set-namespace io.qzxnbqm.vktr` 重新套用改名（命名空间、组件类名、JNI 符号、库名的映射都固化在该脚本里）；`set-package` 不影响命名空间，需要改命名空间时另跑 `set-namespace`。应用显示名仍为 KernelSU，若想改，构建时加 `-PKSU_NAME=xxx`。
 
 ## 签名密钥（重要）
 
