@@ -23,6 +23,7 @@
 | `kernel/setup.sh` | 支持 `KSU_REPO_URL` 指向自己的仓库，并固定克隆到 `KernelSU/` 目录 |
 | `diy/ksu_diy.py` | 一键改包名 / 换证书 / 一致性校验（纯标准库） |
 | `diy/manager-cert.pem` | 管理器签名的**公钥证书**（可以公开） |
+| `.github/workflows/archive-build.yml`、`BUILDS.md` | 每次构建的产物永久归档到 Release，并登记版本信息 |
 
 Kotlin 源码的命名空间（类名 `me.weishu.kernelsu.*`）保持不变，只改了 Android 识别的包名 `applicationId`，这样能和上游干净合并。若想连应用名也改，构建时加 `-PKSU_NAME=xxx`。
 
@@ -60,9 +61,25 @@ Kotlin 源码的命名空间（类名 `me.weishu.kernelsu.*`）保持不变，�
    | `KEY_ALIAS` | `ksu-diy` |
    | `KEY_PASSWORD` | `signing.properties` 里的 `KEY_PASSWORD` |
 
-3. 推送到 `main` 会自动运行 **Build Manager**：先为各 KMI 编 LKM → 编 ksud（内嵌 LKM）→ 编管理器 → 用你的密钥重签。产物在该次运行的 Artifacts：`manager`（最终 APK）、`*-lkm`、`ksud-*`。
+3. 推送到 `main` 会自动运行 **Build Manager**（也可以在 Actions 页面手动 *Run workflow*）：先为各 KMI 编 LKM → 编 ksud（内嵌 LKM）→ 编管理器 → 用你的密钥重签。
    最后的 *Verify manager matches kernel expectations* 步骤会检查 APK 签名，Secret 填错会直接失败。
-4. 发布版本：打一个自己的 tag（例如 `v3.3.1-diy.1`）并推送，**Release** 工作流会创建 GitHub Release；管理器里的「检查更新」读的就是这个仓库的 Release。
+4. 构建成功后 **Archive Build** 自动把产物永久归档到 Release，见下一节。管理器里的「检查更新」读的就是这个仓库最新的 Release。
+
+## 构建产物归档
+
+Actions 页面的 Artifacts 90 天后会被 GitHub 删除，所以每次 `main` 构建成功后，`.github/workflows/archive-build.yml` 会：
+
+1. 下载这次构建的全部产物，用构建时那个提交的配置再校验一遍 APK 签名；
+2. 创建 Release，tag 为 `v<上游版本>-diy.<构建号>`（例如 `v3.3.1-diy.32686`），附上管理器 APK、全部 LKM、ksud、ksuinit、混淆映射、`SHA256SUMS.txt` 和 `BUILD_INFO.md`（版本信息）；
+3. 在 [BUILDS.md](BUILDS.md) 的表格里登记一行（构建号、时间、提交、上游基线、包名、证书、Release 链接），并由 CI 提交到 `main`。
+
+所以本地再提交前要先 `git pull`。归档 tag 打在 DIY 提交上，之后的构建版本名会变成 `v3.3.1-diy.32686-2-gxxxxxxx` 这种形式，`setup.sh` 不传参数时也会检出最新的归档 tag（包名正确）。
+
+- **补归档 / 重新归档**：Actions → *Archive Build* → *Run workflow*，填 Build Manager 那次运行的 ID（运行页面 URL 末尾的数字），产物需未过期。同一构建重复归档会覆盖同一个 Release 和同一行记录。
+- **下载到本地**：
+  ```bash
+  gh release download v3.3.1-diy.32686 -R ajk-john/zpnyccg -D builds/v3.3.1-diy.32686
+  ```
 
 ## 刷入与使用
 
